@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_stadium/pages/splash.dart';
 import 'package:smart_stadium/pages/user_auth/login.dart';
+import 'package:smart_stadium/pages/user_auth/signup.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,16 +15,18 @@ class MyApp extends StatelessWidget {
       title: 'Smart Stadium',
       theme: ThemeData(
         primarySwatch: Colors.amber,
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xff242424),
+        hintColor: Color(0xff9c9a8e),
         // accentColor: Color(0xffededed),
         // cardColor: Color(0xff707070),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: Scaffold(
-        body: SplashPage(),
+              body: SplashPage(),
       ),
       routes:<String, WidgetBuilder>{
-        '/loginpage': (BuildContext context) => Scaffold(body: LogInPage(),),
+        '/login': (BuildContext context) => Scaffold(body: LogInPage(),),
+        '/signup': (BuildContext context) => Scaffold(body: SignUpPage(),),
       },
     );
   }

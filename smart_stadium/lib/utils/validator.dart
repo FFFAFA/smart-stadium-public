@@ -3,6 +3,8 @@ class Validator {
   String validatePassword(String value) {
     if(value.isEmpty) {
       return 'Please enter your password';
+    } else if (value.length < 6){
+      return 'Password should be at least 6 characters';
     }
     return null;
   }
@@ -30,4 +32,15 @@ class Validator {
     // The pattern of the email didn't match the regex above.
     return 'Invalid E-mail format';
   }
+
+  String validateUsername(String value) {
+    if(value.isEmpty) {
+      return 'Please enter a username';
+    } else if (value.length > 24){
+      return "Maximum length: 24 characters";
+    }
+    return null;
+  }
+
 }
+

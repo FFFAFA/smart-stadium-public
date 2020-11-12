@@ -1,32 +1,34 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:toast/toast.dart';
 import 'package:smart_stadium/utils/validator.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import '../home.dart';
 
-class LogInPage extends StatefulWidget {
+class SignUpPage extends StatefulWidget {
 
-  LogInPage({Key key, this.title}) : super(key: key);
+  SignUpPage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _LogInPageState createState() => _LogInPageState();
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
-class _LogInPageState extends State<LogInPage> {
+class _SignUpPageState extends State<SignUpPage> {
 
   TextEditingController _emailController = new TextEditingController();
   TextEditingController _passwordController = new TextEditingController();
-  FirebaseAuth auth = FirebaseAuth.instance;
+  TextEditingController _confirmPasswordController = new TextEditingController();
+  TextEditingController _usernameController = new TextEditingController();
+
   bool showPassword = false;
+  bool showConfirmPassword = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
+    return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).backgroundColor,
       ),
@@ -55,6 +57,37 @@ class _LogInPageState extends State<LogInPage> {
                     key: _formKey,
                     child: Column(
                       children: <Widget>[
+
+                        // Username
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            width: 300,
+                            child: TextFormField(
+                              controller: _usernameController,
+                              style: TextStyle(
+                                color: Colors.amber,
+                                fontSize: 16,
+                              ),
+                              validator: Validator().validateUsername,
+                              decoration: InputDecoration(
+                                enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Theme.of(context).hintColor)
+                                ),
+                                hintText: 'Username',
+                                hintStyle: TextStyle(
+                                  fontSize: 16,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                                errorStyle: TextStyle(
+                                  fontSize: 14,
+                                  color:Colors.redAccent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
                         // Email
                         Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -64,7 +97,7 @@ class _LogInPageState extends State<LogInPage> {
                               controller: _emailController,
                               style: TextStyle(
                                 color: Colors.amber,
-                                fontSize: 18,
+                                fontSize: 16,
                               ),
                               validator: Validator().validateEmail,
                               decoration: InputDecoration(
@@ -73,11 +106,11 @@ class _LogInPageState extends State<LogInPage> {
                                 ),
                                 hintText: 'E-mail',
                                 hintStyle: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   color: Theme.of(context).hintColor,
                                 ),
                                 errorStyle: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   color:Colors.redAccent,
                                 ),
                               ),
@@ -94,7 +127,7 @@ class _LogInPageState extends State<LogInPage> {
                               controller: _passwordController,
                               style: TextStyle(
                                 color: Colors.amber,
-                                fontSize: 18,
+                                fontSize: 16,
                               ),
                               obscureText: !showPassword,
                               validator: Validator().validatePassword,
@@ -111,32 +144,79 @@ class _LogInPageState extends State<LogInPage> {
                                   },
                                 ),
                                 errorStyle: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   color:Colors.redAccent,
                                 ),
                                 hintText: 'Password',
                                 hintStyle: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   color:Theme.of(context).hintColor,
                                 ),
                               ),
                             ),
                           ),
                         ),
+
+                        // Confirm Password
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            width: 300,
+                            child: TextFormField(
+                              controller: _confirmPasswordController,
+                              style: TextStyle(
+                                color: Colors.amber,
+                                fontSize: 16,
+                              ),
+                              obscureText: !showConfirmPassword,
+                              validator: (value){
+                                if(value.isEmpty){
+                                  return "Please confirm your password";
+                                } else if (value != _passwordController.text){
+                                  return "Inconsistent passwords";
+                                }
+                                  return null;
+                              },
+                              decoration: InputDecoration(
+                                enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Theme.of(context).hintColor)
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(showConfirmPassword ? Icons.visibility_off : Icons.visibility, color: Theme.of(context).hintColor),
+                                  onPressed: (){
+                                    setState(() {
+                                      showConfirmPassword = !showConfirmPassword;
+                                    });
+                                  },
+                                ),
+                                errorStyle: TextStyle(
+                                  fontSize: 14,
+                                  color:Colors.redAccent,
+                                ),
+                                hintText: 'Confirm Password',
+                                hintStyle: TextStyle(
+                                  fontSize: 16,
+                                  color:Theme.of(context).hintColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
                       ],
                     ),
                   ),
                 ),
 
-                // Log-in button
+                // Sign-up button
                 Container(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 25.0),
                     child: RaisedButton(
-                      onPressed: _logIn,
+                      onPressed: _SignUp,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15),
-                        child: Text('Log in',
+                        child: Text('Sign up',
                           style: TextStyle(
                             fontSize: 18,
                           ),),
@@ -149,11 +229,11 @@ class _LogInPageState extends State<LogInPage> {
                   ),
                 ),
 
-                // Sign-up button
+                // Return to log in button
                 FlatButton(
-                  onPressed: _pushSignUp,
+                  onPressed: (){Navigator.of(context).pop();},
                   child: Text(
-                    'No account yet? Click to sign up',
+                    'Already have an account? Click to log in',
                     style: TextStyle(
                       decoration: TextDecoration.underline,
                       color: Theme.of(context).hintColor,
@@ -166,30 +246,29 @@ class _LogInPageState extends State<LogInPage> {
           ),
         ],
       ),
-    ),
     );
   }
 
-  Future<void> _logIn() async {
+  Future<void> _SignUp() async {
     final formState = _formKey.currentState;
     if (formState.validate())
     {
       try {
         formState.save();
         try {
-          UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
               email: _emailController.text,
               password: _passwordController.text
           );
-          Toast.show('Logged in', context, duration: Toast.LENGTH_SHORT, gravity:  Toast.BOTTOM);
+          Toast.show('Automatically logged in', context, duration: Toast.LENGTH_SHORT, gravity:  Toast.CENTER);
+          Navigator.of(context).pop();
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
         } on FirebaseAuthException catch (e) {
-          if (e.code == 'user-not-found'){
-            Toast.show('No user found for that email', context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
-          } else if (e.code == 'wrong-password'){
-            Toast.show('Wrong password', context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
+          if (e.code == 'email-already-in-use'){
+            Toast.show('The account exists for that email', context, duration: Toast.LENGTH_SHORT, gravity:  Toast.CENTER);
           } else {
-            Toast.show('$e', context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
+            print(e.message);
+            Toast.show('$e', context, duration: Toast.LENGTH_SHORT, gravity:  Toast.CENTER);
           }
         }
       }
@@ -199,9 +278,5 @@ class _LogInPageState extends State<LogInPage> {
     }
   }
 
-  void _pushSignUp() {
-
-    Navigator.of(context).pushNamed('/signup');
-  }
 
 }

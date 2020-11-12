@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_stadium/pages/user_auth/login.dart';
 
@@ -17,20 +18,42 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin{
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: animation,
-
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-            Image.asset('assets/images/stadium_icon.png', width: 150, height: 150,),
-            Text('Smart Stadium'),
-          ],)
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).backgroundColor,
+          ),
+          child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset('assets/images/stadium_icon.png', width: 150, height: 150,),
+                ],)
+          ),
         )
     );
   }
 
+
+  bool _initialized = false;
+  bool _error = false;
+
+  void initializeFlutterFire() async {
+    try{
+      await Firebase.initializeApp();
+      setState(() {
+        _initialized = true;
+      });
+    } catch(e){
+      setState(() {
+        _error = true;
+      });
+    }
+  }
+
+
   @override
   void initState() {
+    initializeFlutterFire();
     super.initState();
 
     // Initialize animation
@@ -48,7 +71,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin{
   }
 
   void countDown() {
-    var _duration = new Duration(milliseconds: 1500);
+    var _duration = new Duration(milliseconds: 2000);
     new Future.delayed(_duration, pushLoginPage);
   }
 
