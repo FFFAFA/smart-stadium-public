@@ -1,6 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:smart_stadium/pages/reserve.dart';
 import 'package:smart_stadium/pages/user_auth/login.dart';
+import 'package:smart_stadium/pages/verify_ticket.dart';
+import 'package:smart_stadium/pages/widgets/warning_dialog.dart';
 import 'package:toast/toast.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,12 +40,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
-    Toast.show('Signed out', context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LogInPage()));
-  }
-
   @override
   Widget build(BuildContext context) {
 
@@ -54,102 +51,66 @@ class _HomePageState extends State<HomePage> {
     //   return FirebaseError();
     // }
 
-    // if (!_initialized){
-    //   return Loading();
-    // }
+    if (!_initialized){
+       return LinearProgressIndicator();
+    }
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).backgroundColor,
-        ),
-        child:
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).backgroundColor,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 40, left: 10, right: 10, bottom: 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-
-                  // Logo and sign out button
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 10),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              // Logo
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                  // Logo
-                                  Image.asset(
-                                    'assets/images/stadium_icon.png',
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  FlatButton(
-                                      onPressed: _signOut,
-                                      child: Text(
-                                        'Sign out',
-                                        style: TextStyle(color: Theme.of(context).primaryColor),
-                                      )
-                                  )
-                                ],
-                              ),
-
-                            ],
-                          ),
+                        // Logo
+                        Image.asset(
+                          'assets/images/stadium_icon.png',
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.contain,
+                        ),
+                        Row(
+                          children: [
+                            CurrentUser(),
+                            RaisedButton(
+                              onPressed: _signOut,
+                              child: Text(
+                                'Sign out',
+                                style: TextStyle(fontSize: 12, color: Theme.of(context).primaryColor),
+                                ),
+                              shape: StadiumBorder(),
+                              color: Colors.black12,
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
 
-                  // Cloud Firestore test
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Collection \'Reservation\':', style: TextStyle(color: Theme.of(context).primaryColor),),
-                      FutureBuilder<QuerySnapshot>(
-                        future: reservations.get(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) return LinearProgressIndicator();
-                          return Row(
-                            children: [
-                              Text('Document ID: ', style: TextStyle(color: Theme.of(context).primaryColor),),
-                              Text(snapshot.data.docs[0].id, style: TextStyle(color: Theme.of(context).primaryColor),),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                  CardList('Recent Events', 'Events'),
 
-                  // Current User
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Current User:', style: TextStyle(color: Theme.of(context).primaryColor),),
-                      Text('uid: ${FirebaseAuth.instance.currentUser.uid}', style: TextStyle(color: Theme.of(context).primaryColor),),
-                      Text('email: ${FirebaseAuth.instance.currentUser.email}', style: TextStyle(color: Theme.of(context).primaryColor),),
-                    ],
-                  ),
+                  CardList('Special Offers', 'SpecialOffers'),
 
                   // Bottom button row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      // Call button
-                      RoundButton(Icons.call, null),
-                      // Video call button
-                      RoundButton(Icons.video_call, null),
-                      // Report button
-                      RoundButton(Icons.equalizer, null),
-                      // User button
-                      RoundButton(Icons.person, null),
+                      // Make reservation button
+                      RoundButton(Icons.calendar_today, _pushReserve),
+                      // Verify ticket button
+                      RoundButton(Icons.verified, _pushVerifyTicket),
+                      // Navigation button
+                      RoundButton(Icons.location_on, _pushNavigation),
+                      // Order button
+                      RoundButton(Icons.add_shopping_cart, null),
                     ],
                   ),
                 ],
@@ -158,8 +119,39 @@ class _HomePageState extends State<HomePage> {
       )
     );
   }
-}
 
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    Toast.show('Signed out', context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LogInPage()));
+  }
+
+  void _pushVerifyTicket() {
+    Navigator.of(context).push(new MaterialPageRoute(builder: (context) {
+      return new VerifyTicketPage();
+    }));
+  }
+
+  void _pushReserve() {
+    Navigator.of(context).push(new MaterialPageRoute(builder: (context) {
+      return new ReservePage();
+    }));
+  }
+  
+  void _pushNavigation() {
+    String userRole;
+    FirebaseFirestore.instance.collection('User').doc(FirebaseAuth.instance.currentUser.uid).get()
+    .then((snapshot) {
+      userRole = snapshot.data()['role'];
+      if (userRole=='audience' || userRole=='renter') {
+        // Push navigation page
+      } else {
+        DialogProvider().noPermissionDialog(context);
+      }
+    });
+  }
+
+}
 
 class RoundButton extends StatelessWidget {
 
@@ -179,5 +171,162 @@ class RoundButton extends StatelessWidget {
         child: Icon(icon, color: Colors.amber[600], size: 25,),
       ),
     );
+  }
+}
+
+class CurrentUser extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: FirebaseFirestore.instance.collection('User').doc(FirebaseAuth.instance.currentUser.uid).get(),
+      builder: (context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+
+        if (snapshot.hasError){
+          return LinearProgressIndicator();
+        }
+
+        if(!snapshot.hasData) {
+          return LinearProgressIndicator();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5),
+          child: Text(
+            snapshot.data.data()['username'],
+            style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontSize: 15,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class CardList extends StatelessWidget {
+  final String listTitle;
+  final String collectionName;
+
+  CardList(this.listTitle, this.collectionName);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 250,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // title
+          Padding(
+            padding: EdgeInsets.all(5),
+            child: Text(this.listTitle, style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+            ),),
+          ),
+          // list
+          StreamBuilder(
+              stream: FirebaseFirestore.instance.collection(this.collectionName).snapshots(),
+              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot){
+                if (snapshot.hasError){
+                  return LinearProgressIndicator();
+                }
+
+                if(!snapshot.hasData) {
+                  return LinearProgressIndicator();
+                }
+                return Container(
+                  height: 200,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: snapshot.data.docs.map((document){
+                      return Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: EventCard(
+                          title: document.data()['title'],
+                          imageURL: document.data()['imageURL'],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              }
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class EventCard extends StatefulWidget{
+  final String title;
+  final String imageURL;
+  EventCard({Key key, this.title, this.imageURL}):super(key: key);
+  _EventCardState createState() => _EventCardState();
+}
+
+class _EventCardState extends State<EventCard> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+            width: 160,
+            height: 200,
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius:  BorderRadius.circular(15.0),
+              ),
+              elevation: 20,
+              color: Theme.of(context).backgroundColor,
+              shadowColor: Colors.black,
+              child:
+              Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15.0),
+                      image: DecorationImage(
+                        image: NetworkImage(widget.imageURL),
+                        fit: BoxFit.fitHeight,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    height: 100,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15.0),
+                      gradient: LinearGradient(
+                          begin: FractionalOffset.topCenter,
+                          end: FractionalOffset.bottomCenter,
+                          colors: [ Colors.black.withOpacity(0.0), Colors.black.withOpacity(0.8)],
+                          stops: [0.0, 1.0]
+                      ),
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(padding: EdgeInsets.all(5),
+                        child: Text(
+                          widget.title,
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.right,
+                        )
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
   }
 }

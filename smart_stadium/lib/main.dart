@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.amber,
         backgroundColor: Color(0xff242424),
         hintColor: Color(0xff9c9a8e),
+        canvasColor: Color(0xff303030),
         // accentColor: Color(0xffededed),
         // cardColor: Color(0xff707070),
         visualDensity: VisualDensity.adaptivePlatformDensity,

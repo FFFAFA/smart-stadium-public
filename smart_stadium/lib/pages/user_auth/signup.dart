@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:smart_stadium/utils/UserManagement.dart';
 import 'package:toast/toast.dart';
 import 'package:smart_stadium/utils/validator.dart';
 
@@ -256,10 +257,13 @@ class _SignUpPageState extends State<SignUpPage> {
       try {
         formState.save();
         try {
-          UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+          UserCredential userCredential = await firebaseAuth.createUserWithEmailAndPassword(
               email: _emailController.text,
               password: _passwordController.text
           );
+          firebaseAuth.signInWithEmailAndPassword(email: _emailController.text, password: _passwordController.text);
+          UserManagement().createUserDocument(firebaseAuth.currentUser.uid, _usernameController.text);
           Toast.show('Automatically logged in', context, duration: Toast.LENGTH_SHORT, gravity:  Toast.CENTER);
           Navigator.of(context).pop();
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
