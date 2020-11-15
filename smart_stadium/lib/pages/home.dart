@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_stadium/pages/orderCart.dart';
 import 'package:smart_stadium/pages/reserve.dart';
+import 'package:smart_stadium/pages/watchi.dart';
 import 'package:smart_stadium/pages/user_auth/login.dart';
 import 'package:smart_stadium/pages/verify_ticket.dart';
 import 'package:smart_stadium/pages/widgets/warning_dialog.dart';
